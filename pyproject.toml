@@ -15,4 +15,5 @@ dependencies = [
     "langchain-openai>=1.2.1",
     "langchain-pinecone>=0.2.13",
     "langchain-tavily>=0.2.18",
+    "langchain-text-splitters>=1.1.2",
 ]

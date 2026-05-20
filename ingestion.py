@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 
 import certifi
 from dotenv import load_dotenv
-from langchain.text_splitter import RecursiveCharacterTextSplitter  # type: ignore[reportMissingImports]
+from langchain_text_splitters import RecursiveCharacterTextSplitter  
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
@@ -27,10 +27,36 @@ embeddings = OpenAIEmbeddings(
 )
 
 #chroma = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
-vectorstore = PineconeSparseVectorStore(index_name="langchain-doc-helper-index", embedding=embeddings)
+vectorstore = PineconeSparseVectorStore(index_name="langchain-chain-index", embedding=embeddings)
 tavily_extract = TavilyExtract()
 tavily_map = TavilyMap(max_depth=5, max_breadth=20, max_pages=1000)
 tavily_crawl = TavilyCrawl()
+
+
+def main():
+    """Main async process to automate all the process"""
+    log_header("Documentation Ingestion Pipeline")
+
+    log_info(
+        "🔍 TavilyCrawl: Starting to crawl documentation from https://python.langchain.com/",
+        Colors.PURPLE,
+    )
+
+    # Crawl the documentation
+    tavily_crawl_results = tavily_crawl.invoke({
+        "url": "https://python.langchain.com/",
+        "max_depth": 1,
+        "extract_depth": "advanced",
+        "instruction": "Documentatin relevant to ai agents"
+    })
+    all_docs = [Document(page_content=tavily_crawl_results['raw_content'], metadata={"source": tavily_crawl_results['url']}) for result in tavily_crawl_results['results']]
+    log_success(
+        f"TavilyCrawl: Successfully crawled {len(tavily_crawl_results)} URLs from documentation site"
+    )
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
 
 
 
